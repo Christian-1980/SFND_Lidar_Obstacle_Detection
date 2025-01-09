@@ -56,6 +56,7 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     renderPointCloud(viewer, scanned_pointCloud, "results");
 
     // TODO:: Create point processor
+    pcl::ProcessPointClouds<pcl::PointXYZ>* new pointCloudProcessor = new ProcessPointClouds();
   
 }
 
