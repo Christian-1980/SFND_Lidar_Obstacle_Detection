@@ -42,9 +42,26 @@ template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SeparateClouds(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud) 
 {
   // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane
+  typename pcl::PointCloud<PointT>::Ptr ground = new (pcl::PointCloud<PointT> ());
+  typename pcl::PointCloud<PointT>::Ptr obstacles = new (pcl::PointCloud<PointT> ());
+  
+  // Extract the inliers -> ground plane
+  pcl::ExtractIndices<pcl::PointXYZ> extract;  
+  extract.setInputCloud (cloud);
+  extract.setIndices (inliers);
+  extract.setNegative (false);
+  extract.filter (*ground);
 
-    std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(cloud, cloud);
-    return segResult;
+  // Extract the inliers -> obstacles plane
+  pcl::ExtractIndices<pcl::PointXYZ> extract;  
+  extract.setInputCloud (cloud);
+  extract.setIndices (inliers);
+  extract.setNegative (true);
+  extract.filter (*obstacles);
+  
+  std::cerr << "PointCloud representing the planar component: " << cloud_p->width * cloud_p->height << " data points." << std::endl;  
+  std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(obstacles, ground);
+  return segResult;
 }
 
 
