@@ -42,24 +42,24 @@ template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SeparateClouds(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud) 
 {
   // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane
-  typename pcl::PointCloud<PointT>::Ptr ground = new (pcl::PointCloud<PointT> ());
-  typename pcl::PointCloud<PointT>::Ptr obstacles = new (pcl::PointCloud<PointT> ());
+  typename pcl::PointCloud<PointT>::Ptr ground (new pcl::PointCloud<PointT> ());
+  typename pcl::PointCloud<PointT>::Ptr obstacles (new pcl::PointCloud<PointT> ());
   
   // Extract the inliers -> ground plane
-  pcl::ExtractIndices<pcl::PointXYZ> extract;  
-  extract.setInputCloud (cloud);
-  extract.setIndices (inliers);
-  extract.setNegative (false);
-  extract.filter (*ground);
+  pcl::ExtractIndices<PointT> extract_ground;  
+  extract_ground.setInputCloud (cloud);
+  extract_ground.setIndices (inliers);
+  extract_ground.setNegative (false);
+  extract_ground.filter (*ground);
 
   // Extract the inliers -> obstacles plane
-  pcl::ExtractIndices<pcl::PointXYZ> extract;  
+  pcl::ExtractIndices<PointT> extract;  
   extract.setInputCloud (cloud);
   extract.setIndices (inliers);
   extract.setNegative (true);
   extract.filter (*obstacles);
   
-  std::cerr << "PointCloud representing the planar component: " << cloud_p->width * cloud_p->height << " data points." << std::endl;  
+  std::cerr << "PointCloud representing the planar component: " << ground->width * ground->height << " data points." << std::endl;  
   std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(obstacles, ground);
   return segResult;
 }
@@ -73,7 +73,7 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     
     // TODO:: Fill in this function to find inliers for the cloud.
     // Chapter 2.4 -- Create the segmentation object
-    pcl::SACSegmentation<pcl::PointT> seg;
+    pcl::SACSegmentation<PointT> seg;
     pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
     
@@ -86,12 +86,11 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     seg.setDistanceThreshold (distanceThreshold);
   
     // set the input cloud and segment it into 2 outputs: inliers which define the plane, and math coefficient for rendering
-    seg.setInputCloud (cloud_filtered);
+    seg.setInputCloud (cloud);
     seg.segment (*inliers, *coefficients);
     if (inliers->indices.size () == 0)
     {
       std::cerr << "Could not estimate a planar model for the given dataset." << std::endl;
-      break;
     }
 
     auto endTime = std::chrono::steady_clock::now();
