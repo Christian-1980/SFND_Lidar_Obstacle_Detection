@@ -56,7 +56,7 @@ struct KdTree
 		insertHelper(root, 0, point, id);
 	}
 
-	// check if the node point is within a boxed square that is 2x distanceTol for length, centered around the target point
+	// check if the node point is within a boxed square which is 2 times the tolerance
     bool isInBox(std::vector<float> pointToCheck, std::vector<float> treePoint, float distanceTol)
     {
         if ((treePoint[0] < (pointToCheck[0] - distanceTol)) || (treePoint[0] > (pointToCheck[0] + distanceTol)) || (treePoint[1] < (pointToCheck[1] - distanceTol)) || (treePoint[1] > (pointToCheck[1] + distanceTol))) {
@@ -65,7 +65,7 @@ struct KdTree
         return true;
     }
 
-    // calculate if the distance between node point and target point is within tolerance
+    // calculate if the distance between node point and point to check point is within tolerance
     bool isInDistanceTol(std::vector<float> pointToCheck, std::vector<float> treePoint, float distanceTol)
     {
         float d = sqrtf(pow((pointToCheck[0] - treePoint[0]), 2.0) + pow((pointToCheck[1] - treePoint[1]), 2.0));
