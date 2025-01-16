@@ -103,50 +103,43 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 
 
 template<typename PointT>
-std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::Clustering(typename pcl::PointCloud<PointT>::Ptr obstacles_cloud, float clusterTolerance, int minSize, int maxSize)
+std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::Clustering(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize)
 {
-
     // Time clustering process
     auto startTime = std::chrono::steady_clock::now();
 
+    // Vector to store the different obstacles
     std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
+    std::vector<pcl::PointIndices> clusterIndices;
 
-    // TODO:: Fill in the function to perform euclidean clustering to group detected obstacles
-    // Creating the KdTree object for the search method of the extraction
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
-    tree->setInputCloud (obstacles_cloud);
-  
-    // now: list to store
-    std::vector<pcl::PointIndices> cluster_indices;
-    
-    // method to extract the clusters based on the hyper parameters
-    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-    ec.setClusterTolerance (clusterTolerance);
-    ec.setMinClusterSize (minSize);
-    ec.setMaxClusterSize (maxSize);
-    ec.setSearchMethod (tree);
-    ec.setInputCloud (obstacles_cloud);
-    ec.extract (cluster_indices);
+    // Create a KdTree object for the search method of the extraction
+    // remeber to use the type definitions
+    typename pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
+    tree->setInputCloud(cloud);
 
-    // Now we have the indicies for each cluster
-    // we have to store those as an point cloud to
-    // clusters list 
+    // Extraction example
+    typename pcl::EuclideanClusterExtraction<PointT> ec;
+    ec.setClusterTolerance(clusterTolerance);
+    ec.setMinClusterSize(minSize);
+    ec.setMaxClusterSize(maxSize);
+    ec.setSearchMethod(tree);
+    ec.setInputCloud(cloud);
+    ec.extract(clusterIndices);
 
-    int j = 0;
-    for (const auto& cluster : cluster_indices)
+    for (auto it = clusterIndices.begin(); it != clusterIndices.end(); ++it)
     {
-      pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
-      for (const auto& idx : cluster.indices) {
-        cloud_cluster->push_back((*cloud_filtered)[idx]);
-      } //*
-      cloud_cluster->width = cloud_cluster->size ();
-      cloud_cluster->height = 1;
-      cloud_cluster->is_dense = true;
-  
-      std::cout << "PointCloud representing the Cluster: " << cloud_cluster->size () << " data points." << std::endl;
-      j++;
+        typename pcl::PointCloud<PointT>::Ptr cluster(new pcl::PointCloud<PointT>);
+        // Create a cluster with the extracted points belonging to the same object
+        for (auto pointIt = it->indices.begin(); pointIt != it->indices.end(); ++pointIt)
+        {
+            cluster->push_back(cloud->points[*pointIt]);
+        }
+        cluster->width = cluster->size();
+        cluster->height = 1;
+        cluster->is_dense = true;
+        // Add the cluster to the return cluster vector
+        clusters.push_back(cluster);
     }
-
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "clustering took " << elapsedTime.count() << " milliseconds and found " << clusters.size() << " clusters" << std::endl;
