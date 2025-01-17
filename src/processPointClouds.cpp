@@ -21,13 +21,59 @@ void ProcessPointClouds<PointT>::numPoints(typename pcl::PointCloud<PointT>::Ptr
 
 
 template<typename PointT>
-typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cloud, float filterRes, Eigen::Vector4f minPoint, Eigen::Vector4f maxPoint)
+typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr input_cloud, float filterRes, Eigen::Vector4f minPoint, Eigen::Vector4f maxPoint)
 {
 
     // Time segmentation process
     auto startTime = std::chrono::steady_clock::now();
 
     // TODO:: Fill in the function to do voxel grid point reduction and region based filtering
+    // first we need a new poinmt cloud to store
+    typename pcl::PointCloud<PointT>::Ptr downsampled_cloud = (new pcl::PointCloud<PointT>);
+
+    // Create the filtering object
+    pcl::VoxelGrid<PointT> voxel_filter;
+    voxel_filter.setInputCloud (input_cloud);
+    voxel_filter.setLeafSize (filterRes, filterRes, filterRes);
+    voxel_filter.filter (*downsampled_cloud);
+
+    // RoI - Region of Interest
+    typename pcl::PointCloud<PointT>::Ptr boxed_cloud = (new pcl::PointCloud<PointT>);
+    pcl::CropBox<PointT> box_filter(true);
+    box_filter.setMin(minPoint);
+    box_filter.setMax(maxPoint);
+    box_filter.setInputCloud(downsampled_cloud);
+    box_filter.filter(*boxed_cloud);
+
+    // Remove Car's response
+    // store the points belonging to the car and make a box for the car to later subratct
+    // then identify the point inside and remove those from the boxed_cloud
+    std::vector<int> car_indicies;
+    pcl::CropBox<PointT> car_filter(true);
+    car_filter.setMin(Eigen::Vector4f(-1.5, -1.7, -1, 1));
+    car_filter.setMax(Eigen::Vector4f(2.6, 1.7, -0.4, 1));
+    car_filter.setInputCloud(boxed_cloud);
+    car_filter.filter(car_indicies);
+
+    pcl::PointIndices::Ptr car_box_inliers{new pcl::PointIndices};
+    for (int point: indices)
+        car_box_inliers->indices.push_back(point);
+
+    typename pcl::PointCloud<PointT>::Ptr cloud_filtered{new pcl::PointCloud<PointT>};
+    pcl::ExtractIndices<PointT> extract;
+    extract.setIndices(car_box_inliers);
+    extract.setNegative(true);
+    extract.setInputCloud(boxed_cloud);
+    extract.filter(*cloudFiltered);
+
+    // Give feedback to the user
+    std::cerr << "PointCloud after filtering: " << cloudFiltered->width * cloudFiltered->height 
+         << " data points (" << pcl::getFieldsList (*cloudFiltered) << ")." << std::endl;
+
+    // STore the new downsmapled cloud
+    pcl::PCDWriter writer;
+    writer.write ("0000000000_downsampled.pcd", *cloud_filtered, 
+           Eigen::Vector4f::Zero (), Eigen::Quaternionf::Identity (), false);
 
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
