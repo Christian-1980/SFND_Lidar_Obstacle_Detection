@@ -86,7 +86,7 @@ struct KdTree
                 }
             }
 
-            // branch to the next node depending on if the boxed square crosses over the divided x or y region
+            // next node depending on if the boxed square crosses over the divided x or y region
             if ((pointToCheck[depth % 2] - distanceTol) < node->point[depth % 2]) {
                 searchHelper(pointToCheck, node->left, depth+1, distanceTol, ids);
             }
@@ -94,12 +94,13 @@ struct KdTree
                 searchHelper(pointToCheck, node->right, depth+1, distanceTol, ids);
             }
         }
+	}
 
 	// return a list of point ids in the tree that are within distance of target
 	std::vector<int> search(std::vector<float> pointToCheck, float distanceTol)
 	{
 		std::vector<int> ids;
-		searchHelper(pointToCheck, root, 0, distanceTol, ids)
+		searchHelper(pointToCheck, root, 0, distanceTol, ids);
 		return ids;
 	}
 	
