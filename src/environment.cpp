@@ -93,7 +93,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
   pcl::PointCloud<pcl::PointXYZI>::Ptr input_cloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
   
   //  renderPointCloud(viewer,inputCloud,"inputCloud");
-  
+
   // 1. Downsampling
   pcl::PointCloud<pcl::PointXYZI>::Ptr sampled_cloud = pointProcessorI->FilterCloud(input_cloud, 0.2, Eigen::Vector4f(-15, -6.0, -3, 1), Eigen::Vector4f(30, 6.0, 10, 1));
   
@@ -115,7 +115,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
     {
         renderPointCloud(viewer, cluster, "obstCloud_" + std::to_string(ClusterId), render_colours[ClusterId]);
 
-        Box box = pointProcessor->BoundingBox(cluster);
+        Box box = pointProcessorI->BoundingBox(cluster);
         renderBox(viewer, box, ClusterId);
 
         ++ClusterId;
