@@ -145,6 +145,62 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     return segResult;
 }
 
+// copied the oimplementation from the quiz and mods to work with given point cloud data of type PointT
+template<typename PointT>
+std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SegmentPlaneRansac3D(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceTol)
+{
+	// for etsimation how long this process takes
+	auto startTime = std::chrono::steady_clock::now();
+
+	// A set to store data
+	std::unordered_set<int> inliersResult; // a set always has unique elements -> no identicals coming from rand
+	srand(time(NULL));
+	
+	while (maxIterations--) {
+        std::unordered_set<int> temp_result; // create a temporary result to store and compare the size
+
+        //UDACITY solution
+		//while (temp_result.size() < 2) // just draw 2 points from the cloud randomlyinliersResult
+        //    temp_result.insert(rand()%(cloud->points.size()));
+
+		// 3 Point form a plane
+		pcl::PointT point_1 = cloud -> points.at(rand()%(cloud->points.size()));
+		pcl::PointT point_2 = cloud -> points.at(rand()%(cloud->points.size()));
+		pcl::PointT point_3 = cloud -> points.at(rand()%(cloud->points.size()));
+
+		// Define helpers A,B,C
+        float A, B, C, D;
+
+        A = (point_2.y - point_1.y) * (point_3.z - point_1.z) - (point_2.z - point_1.z) * (point_3.y - point_1.y);
+        B = (point_2.z - point_1.z) * (point_3.x - point_1.x) - (point_2.x - point_1.x) * (point_3.z - point_1.z);
+        C = (point_2.x - point_1.x) * (point_3.y - point_1.y) - (point_2.y - point_1.y) * (point_3.x - point_1.x);
+        D = -1 * (A * point_1.x + B * point_1.y + C * point_1.z);
+
+        for (int index = 0; index < cloud->points.size(); index++) {
+            // Skip the two points that are sample points; if the count is larger than 0 then it is already in the set!
+            if (temp_result.count(index) > 0)
+                continue;
+
+			// the point to check whether it is part of the plane
+            pcl::PointT point_4 = cloud->points[index];
+
+            float d = fabs(A * point_4.x + B * point_4.y + C * point_4.z + D) / sqrt(A * A + B * B + C * C);
+            if (d <= distanceTol) {
+                temp_result.insert(index);
+            }
+        }
+        if (temp_result.size() > inliersResult.size()) {
+            inliersResult = temp_result;
+        }
+    }
+
+	auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    std::cout << "Ransac3D took " << elapsedTime.count() << "ms" << std::endl;
+	
+    std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult = SeparateClouds(inliers,cloud);
+    return segResult;
+}
 
 template<typename PointT>
 std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::Clustering(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize)
