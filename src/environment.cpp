@@ -8,6 +8,9 @@
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds.cpp"
 
+// Define a flag to set whether PCL build in functions are used
+bool FLAG_PCL = false;
+
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr& viewer)
 {
 
@@ -131,12 +134,20 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
                                                                                     max_point);
   
   // 2. Segmentaion
-  int iterations = 100;
-  float distance = 0.2;
-  std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlane(sampled_cloud,
-                                                                                                                                      iterations,
-                                                                                                                                      distance);
-  // Rendering both plane and obstacles
+  if (FLAG_PCL=true) {
+    int iterations = 100;
+    float distance = 0.2;
+    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlane(sampled_cloud,
+                                                                                                                                        iterations,
+                                                                                                                                        distance);
+  } else {
+    int iterations = 100;
+    float distance = 0.2;
+    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlaneRansac3D(sampled_cloud,
+                                                                                                                                                iterations,
+                                                                                                                                                distance);
+  }
+  
   //renderPointCloud(viewer,segment_cloud.first,"obstCloud",Color(1,0,0));
   renderPointCloud(viewer,segment_cloud.second,"planeCloud",Color(0,1,0));
 
