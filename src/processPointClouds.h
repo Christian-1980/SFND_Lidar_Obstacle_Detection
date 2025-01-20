@@ -46,6 +46,10 @@ public:
 
     std::vector<typename pcl::PointCloud<PointT>::Ptr> Clustering(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize);
 
+    void clusterHelper(typename pcl::PointCloud<PointT>::Ptr cloud, std::vector<bool>& processedPoints, int index, typename pcl::PointCloud<PointT>::Ptr cluster, KdTree* tree, float clusterTolerance);
+
+    std::vector<typename pcl::PointCloud<PointT>::Ptr> ClusteringEuclidean(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize);
+
     Box BoundingBox(typename pcl::PointCloud<PointT>::Ptr cluster);
 
     void savePcd(typename pcl::PointCloud<PointT>::Ptr cloud, std::string file);

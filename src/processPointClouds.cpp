@@ -247,6 +247,53 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     return clusters;
 }
 
+// use cluster helper from the quiz
+template<typename PointT>
+void ProcessPointClouds<PointT>::clusterHelper(typename pcl::PointCloud<PointT> cloud, std::vector<bool>& processedPoints, int index, std::vector<int>& cluster, KdTree* tree, float distanceTol)
+{
+    processedPoints[index] = true;
+    cluster.push_back(index);
+
+    std::vector<int> proximity = tree->search(points[index], distanceTol);
+    for (int id : proximity)
+    {
+        if (!processedPoints[id])
+        {
+            clusterHelper(points, processedPoints, id, cluster, tree, distanceTol);
+        }
+    }
+}
+
+// resuse the quiz code
+template<typename PointT>
+std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::EuclideanCluster(typename pcl::PointCloud<PointT>::Ptr cloud, float distanceTol, int min_size, int max_size)
+{
+	// there is a need for the KdTree object for the efficient searchsearch
+    KdTree* tree = new KdTree;
+    for (int i = 0; i < cloud->points.size(); i++)
+    {
+        PointT point = cloud->points[i];
+        tree->insert({point.x, point.y, point.y}, i);
+    }
+
+    std::vector<std::vector<int>> clusters;
+
+	std::vector<bool> processedPoints(points.size(), false);    // keep track what is been processed, set default to false
+
+    for (int i = 0; i < points.size(); ++i)
+    {
+        if (processedPoints[i])
+            continue;
+
+        std::vector<int> cluster;
+        clusterHelper(points, processedPoints, i, cluster, tree, distanceTol);
+        clusters.push_back(cluster);
+    }
+ 
+	return clusters;
+
+}
+
 
 template<typename PointT>
 Box ProcessPointClouds<PointT>::BoundingBox(typename pcl::PointCloud<PointT>::Ptr cluster)
