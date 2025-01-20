@@ -94,7 +94,7 @@ void clusterHelper(const std::vector<std::vector<float>>& points, std::vector<bo
 std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol)
 {
 	std::vector<std::vector<int>> clusters;
-	std::vector<bool> processedPoints(points.size(), false);    // keep track what is been processed
+	std::vector<bool> processedPoints(points.size(), false);    // keep track what is been processed, set default to false
 
     for (int i = 0; i < points.size(); ++i)
     {
@@ -109,7 +109,7 @@ std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<flo
 	return clusters;
 
 }
-
+Chapter 2.4 --
 int main ()
 {
 

@@ -66,6 +66,7 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int ma
 	// for etsimation how long this process takes
 	auto startTime = std::chrono::steady_clock::now();
 
+	// A set to store data
 	std::unordered_set<int> inliersResult; // a set always has unique elements -> no identicals coming from rand
 	srand(time(NULL));
 	
@@ -87,19 +88,24 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int ma
         B = point_2.x - point_1.x;
         C = point_1.x*point_2.y - point_2.x*point_1.y;
 
+		// Now the iteraive process
         for (int index = 0; index < cloud->points.size(); index++) {
-            // Skip the two points that are sample points; if the count is larger than 0 then it is already in the set!
+            
+			// Condition: skip the two points that are sample points; if the count is larger than 0 then it is already in the set!
             if (temp_result.count(index) > 0)
                 continue;
 
-			// the point to check whether it is in the line
+			// point to proces
             pcl::PointXYZ point_3 = cloud->points[index];
 
             float d = fabs(A*point_3.x+B*point_3.y+C)/sqrt(A*A+B*B);
+
+			// Return indicies of inliers inside distance tolerance
             if (d <= distanceTol) {
                 temp_result.insert(index);
             }
         }
+
         if (temp_result.size() > inliersResult.size()) {
             inliersResult = temp_result;
         }
@@ -108,19 +114,17 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int ma
 	auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "Ransac took " << elapsedTime.count() << "ms" << std::endl;
-
-	// Return indicies of inliers from fitted line with most inliers
 	
 	return inliersResult;
-
 }
 
 
-std::unordered_set<int> RansacPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int maxIterations, float distanceTol)
+std::unordered_set<int> Ransac3D(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int maxIterations, float distanceTol)
 {
 	// for etsimation how long this process takes
 	auto startTime = std::chrono::steady_clock::now();
 
+	// A set to store data
 	std::unordered_set<int> inliersResult; // a set always has unique elements -> no identicals coming from rand
 	srand(time(NULL));
 	
@@ -149,7 +153,7 @@ std::unordered_set<int> RansacPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, i
             if (temp_result.count(index) > 0)
                 continue;
 
-			// the point to check whether it is in the line
+			// the point to check whether it is part of the plane
             pcl::PointXYZ point_4 = cloud->points[index];
 
             float d = fabs(A * point_4.x + B * point_4.y + C * point_4.z + D) / sqrt(A * A + B * B + C * C);
@@ -164,9 +168,7 @@ std::unordered_set<int> RansacPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, i
 
 	auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    std::cout << "Ransac took " << elapsedTime.count() << "ms" << std::endl;
-
-	// Return indicies of inliers from fitted line with most inliers
+    std::cout << "Ransac3D took " << elapsedTime.count() << "ms" << std::endl;
 	
 	return inliersResult;
 
@@ -186,8 +188,14 @@ int main ()
 	
 
 	// TODO: Change the max iteration and distance tolerance arguments for Ransac function
-	//std::unordered_set<int> inliers = Ransac(cloud, 100, 1);
-	std::unordered_set<int> inliers = RansacPlane(cloud, 1000, 0.3);
+	// hyper params
+	int iterations = 1000;
+	float distnace_tolerance = 0.3;
+
+	//std::unordered_set<int> inliers = Ransac(cloud, iterations, distnace_tolerance);
+	std::unordered_set<int> inliers = Ransac3D(cloud,
+											   iterations,
+											   distnace_tolerance);
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr  cloudInliers(new pcl::PointCloud<pcl::PointXYZ>());
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudOutliers(new pcl::PointCloud<pcl::PointXYZ>());
