@@ -37,7 +37,7 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     voxel_filter.setLeafSize (filterRes, filterRes, filterRes);
     voxel_filter.filter (*downsampled_cloud);
 
-    // RoI - Region of Interest
+    // RoI - Region of Interest/ Relevance for the car to consider
     typename pcl::PointCloud<PointT>::Ptr boxed_cloud (new pcl::PointCloud<PointT>);
     pcl::CropBox<PointT> box_filter(true);
     box_filter.setMin(minPoint);
@@ -59,6 +59,7 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     for (int point: indices)
         car_box_inliers->indices.push_back(point);
 
+    // now remove indicies from the car itself, the car_box_inliers
     typename pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
     pcl::ExtractIndices<PointT> extract;
     extract.setIndices(car_box_inliers);
@@ -70,17 +71,11 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     std::cerr << "PointCloud after filtering: " << cloud_filtered->width * cloud_filtered->height 
          << " data points (" << pcl::getFieldsList (*cloud_filtered) << ")." << std::endl;
 
-    // // STore the new downsmapled cloud
-    // pcl::PCDWriter writer;
-    // writer.write ("0000000000_downsampled.pcd", *cloud_filtered, 
-    //        Eigen::Vector4f::Zero (), Eigen::Quaternionf::Identity (), false);
-
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
 
     return cloud_filtered;
-
 }
 
 
