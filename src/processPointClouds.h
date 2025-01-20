@@ -18,7 +18,10 @@
 #include <ctime>
 #include <chrono>
 #include "render/box.h"
+#include "quiz/cluster/kdtree.h"
+
 #include <filesystem> // Add this include
+
 
 namespace fs = std::filesystem; // Create an alias for std::filesystem
 
