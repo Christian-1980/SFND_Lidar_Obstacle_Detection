@@ -102,6 +102,7 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
   
   std::cerr << "PointCloud representing the planar component: " << ground->width * ground->height << " data points." << std::endl;  
   std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(obstacles, ground);
+  
   return segResult;
 }
 
@@ -113,9 +114,11 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     auto startTime = std::chrono::steady_clock::now();
     
     // TODO:: Fill in this function to find inliers for the cloud.
-    // Chapter 2.4 -- Create the segmentation object
+    // Create the segmentation object
     pcl::SACSegmentation<PointT> seg;
     pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
+
+    // Create a vector to store the inliers for the ground plane
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
     
     // Optional
