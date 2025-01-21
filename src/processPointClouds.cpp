@@ -265,7 +265,7 @@ void ProcessPointClouds<PointT>::clusterHelper(typename pcl::PointCloud<PointT> 
     {
         if (!processed_points[id])
         {
-            clusterHelper(points, processed_points, id, cluster, tree, distanceTol);
+            clusterHelper(cloud, processed_points, id, cluster, tree, distanceTol);
         }
     }
 }
