@@ -251,15 +251,21 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 template<typename PointT>
 void ProcessPointClouds<PointT>::clusterHelper(typename pcl::PointCloud<PointT> cloud, std::vector<bool>& processedPoints, int index, std::vector<int>& cluster, KdTree* tree, float distanceTol)
 {
-    processedPoints[index] = true;
-    cluster.push_back(index);
+    // 1. Vector to store which point already been processed
+    processed_points[index] = true;
 
-    std::vector<int> proximity = tree->search(points[index], distanceTol);
-    for (int id : proximity)
+    // 2. get the cluster points by index
+    cluster -> push_back(cloud -> points[index]);
+
+    // 3. now run thru all points of the cloud in a efficient way by using KdTree
+    pcl::PointT point_of_interest = cloud -> point[index];
+    std::vector<int> cluster_member_check = tree->search(point_of_interest.x, point_of_interest.y, point_of_interest.z, distanceTol);
+
+    for (int id : cluster_member_check)
     {
-        if (!processedPoints[id])
+        if (!processed_points[id])
         {
-            clusterHelper(points, processedPoints, id, cluster, tree, distanceTol);
+            clusterHelper(points, processed_points, id, cluster, tree, distanceTol);
         }
     }
 }
