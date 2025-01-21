@@ -247,7 +247,7 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     return clusters;
 }
 
-// use cluster helper from the quiz
+// use cluster helper / adaption from the quiz
 template<typename PointT>
 void ProcessPointClouds<PointT>::clusterHelper(typename pcl::PointCloud<PointT> cloud, std::vector<bool>& processedPoints, int index, std::vector<int>& cluster, KdTree* tree, float distanceTol)
 {
@@ -270,7 +270,7 @@ void ProcessPointClouds<PointT>::clusterHelper(typename pcl::PointCloud<PointT> 
     }
 }
 
-// resuse the quiz code
+// resuse / adapt the quiz code
 template<typename PointT>
 std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::EuclideanCluster(typename pcl::PointCloud<PointT>::Ptr cloud, float distanceTol, int min_size, int max_size)
 {
