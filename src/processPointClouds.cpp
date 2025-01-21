@@ -245,7 +245,7 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 
 // use cluster helper / adaption from the quiz
 template<typename PointT>
-void clusterHelper(typename pcl::PointCloud<PointT> cloud, std::vector<bool>& processed_points, int index, typename pcl::PointCloud<PointT>::Ptr cluster, KdTree* tree, float distanceTol)
+void ProcessPointClouds<PointT>::clusterHelper(typename pcl::PointCloud<PointT>::Ptr cloud, std::vector<bool>& processed_points, int index, typename pcl::PointCloud<PointT>::Ptr cluster, KdTree* tree, float distanceTol)
 {
     // 1. Vector to store which point already been processed
     processed_points[index] = true;
@@ -254,8 +254,8 @@ void clusterHelper(typename pcl::PointCloud<PointT> cloud, std::vector<bool>& pr
     cluster -> push_back(cloud -> points[index]);
 
     // 3. now run thru all points of the cloud in a efficient way by using KdTree
-    PointT point_of_interest = cloud -> point[index];
-    std::vector<int> cluster_member_check = tree->search(point_of_interest.x, point_of_interest.y, point_of_interest.z, distanceTol);
+    PointT point_of_interest = cloud -> points[index];
+    std::vector<int> cluster_member_check = tree->search({point_of_interest.x, point_of_interest.y, point_of_interest.z}, distanceTol);
 
     for (int id : cluster_member_check)
     {

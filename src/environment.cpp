@@ -207,14 +207,14 @@ void cityBlockStream(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPoin
     int max_cluster_size = 600;
 
     // b) clustering
-    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
-                                                                                                    cluster_tolerance,
-                                                                                                    min_cluster_size,
-                                                                                                    max_cluster_size);
-    // std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->EuclideanCluster(segment_cloud.first,
+    // std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
     //                                                                                                 cluster_tolerance,
     //                                                                                                 min_cluster_size,
     //                                                                                                 max_cluster_size);
+    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->EuclideanCluster(segment_cloud.first,
+                                                                                                    cluster_tolerance,
+                                                                                                    min_cluster_size,
+                                                                                                    max_cluster_size);
     // 4. Rendering and bounding boxes
     int ClusterId = 0;
 
