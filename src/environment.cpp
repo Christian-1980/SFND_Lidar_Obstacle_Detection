@@ -8,8 +8,6 @@
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds.cpp"
 
-// Define a flag to set whether PCL build in functions are used
-bool FLAG_PCL = false;
 
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr& viewer)
 {
@@ -114,6 +112,8 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
   // -----Open 3D viewer and display City Block     -----
   // ----------------------------------------------------
   
+  int flag_pcl = 1; //1 = is used
+
   // create new instance of Porcess Point Cloud with intensities
   ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
 
@@ -134,19 +134,16 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
                                                                                     max_point);
   
   // 2. Segmentaion
-  if (FLAG_PCL=true) {
-    int iterations = 100;
-    float distance = 0.2;
-    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlane(sampled_cloud,
-                                                                                                                                        iterations,
-                                                                                                                                        distance);
-  } else {
-    int iterations = 100;
-    float distance = 0.2;
-    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlaneRansac3D(sampled_cloud,
-                                                                                                                                                iterations,
-                                                                                                                                                distance);
-  }
+  // int iterations = 100;
+  // float distance = 0.2;
+  // std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlane(sampled_cloud,
+  //                                                                                                                                     iterations,
+  //                                                                                                                                     distance);
+  int iterations = 100;
+  float distance = 0.2;
+  std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlaneRansac3D(sampled_cloud,
+                                                                                                                                               iterations,
+                                                                                                                                               distance);
   
   //renderPointCloud(viewer,segment_cloud.first,"obstCloud",Color(1,0,0));
   renderPointCloud(viewer,segment_cloud.second,"planeCloud",Color(0,1,0));
@@ -195,22 +192,29 @@ void cityBlockStream(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPoin
     float distance = 0.2;
 
     // b) Segmentation
-    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlane(sampledCloud, 100, 0.2);
+    // std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlane(sampledCloud, 100, 0.2);
+    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlaneRansac3D(sampledCloud,
+                                                                                                                                                iterations,
+                                                                                                                                                distance);
     // c) render cloud
     // renderPointCloud(viewer, segment_cloud.first, "obstacleCloud", Color(1,0,0));
     renderPointCloud(viewer, segment_cloud.second, "planeCloud", Color(0,1,0));
 
 
     // a) definition of the hyperparameters
-    float cluster_tolerance = 0.44;
-    int min_cluster_size = 15;
-    int max_cluster_size = 700;
+    float cluster_tolerance = 0.4;
+    int min_cluster_size = 30;
+    int max_cluster_size = 600;
 
     // b) clustering
     std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
                                                                                                     cluster_tolerance,
                                                                                                     min_cluster_size,
                                                                                                     max_cluster_size);
+    // std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->EuclideanCluster(segment_cloud.first,
+    //                                                                                                 cluster_tolerance,
+    //                                                                                                 min_cluster_size,
+    //                                                                                                 max_cluster_size);
     // 4. Rendering and bounding boxes
     int ClusterId = 0;
 

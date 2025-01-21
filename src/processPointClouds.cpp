@@ -151,22 +151,22 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 {
 	// for etsimation how long this process takes
 	auto startTime = std::chrono::steady_clock::now();
+    srand(time(NULL));
 
 	// A set to store data
-	std::unordered_set<int> inliersResult; // a set always has unique elements -> no identicals coming from rand
-	srand(time(NULL));
-	
-	while (maxIterations--) {
-        std::unordered_set<int> temp_result; // create a temporary result to store and compare the size
+	pcl::PointIndices::Ptr inliers{new pcl::PointIndices()}; // a set always has unique elements -> no identicals coming from rand
+
+	while (maxIterations-- > 0) {
+        pcl::PointIndices::Ptr temp_result{new pcl::PointIndices()};// create a temporary result to store and compare the size
 
         //UDACITY solution
 		//while (temp_result.size() < 2) // just draw 2 points from the cloud randomlyinliersResult
         //    temp_result.insert(rand()%(cloud->points.size()));
 
 		// 3 Point form a plane
-		pcl::PointT point_1 = cloud -> points.at(rand()%(cloud->points.size()));
-		pcl::PointT point_2 = cloud -> points.at(rand()%(cloud->points.size()));
-		pcl::PointT point_3 = cloud -> points.at(rand()%(cloud->points.size()));
+		PointT point_1 = cloud -> points.at(rand()%(cloud->points.size()));
+		PointT point_2 = cloud -> points.at(rand()%(cloud->points.size()));
+		PointT point_3 = cloud -> points.at(rand()%(cloud->points.size()));
 
 		// Define helpers A,B,C
         float A, B, C, D;
@@ -176,21 +176,17 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
         C = (point_2.x - point_1.x) * (point_3.y - point_1.y) - (point_2.y - point_1.y) * (point_3.x - point_1.x);
         D = -1 * (A * point_1.x + B * point_1.y + C * point_1.z);
 
-        for (int index = 0; index < cloud->points.size(); index++) {
-            // Skip the two points that are sample points; if the count is larger than 0 then it is already in the set!
-            if (temp_result.count(index) > 0)
-                continue;
-
-			// the point to check whether it is part of the plane
-            pcl::PointT point_4 = cloud->points[index];
-
-            float d = fabs(A * point_4.x + B * point_4.y + C * point_4.z + D) / sqrt(A * A + B * B + C * C);
-            if (d <= distanceTol) {
-                temp_result.insert(index);
+        for (auto it = cloud -> points.begin(); it != cloud->points.end(); it++) {
+            float d = fabs(A * (*it).x + B * (*it).y + C * (*it).z + D) / sqrt(A * A + B * B + C * C);
+            
+            // If distance is smaller than threshold count it as inlier
+            if (d <= distanceTol)
+            {
+                temp_result->indices.push_back(it - cloud->begin());
             }
         }
-        if (temp_result.size() > inliersResult.size()) {
-            inliersResult = temp_result;
+        if (temp_result ->indices.size() > inliers -> indices.size()) {
+            inliers = temp_result;
         }
     }
 
@@ -249,7 +245,7 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 
 // use cluster helper / adaption from the quiz
 template<typename PointT>
-void ProcessPointClouds<PointT>::clusterHelper(typename pcl::PointCloud<PointT> cloud, std::vector<bool>& processedPoints, int index, std::vector<int>& cluster, KdTree* tree, float distanceTol)
+void clusterHelper(typename pcl::PointCloud<PointT> cloud, std::vector<bool>& processed_points, int index, typename pcl::PointCloud<PointT>::Ptr cluster, KdTree* tree, float distanceTol)
 {
     // 1. Vector to store which point already been processed
     processed_points[index] = true;
@@ -258,7 +254,7 @@ void ProcessPointClouds<PointT>::clusterHelper(typename pcl::PointCloud<PointT> 
     cluster -> push_back(cloud -> points[index]);
 
     // 3. now run thru all points of the cloud in a efficient way by using KdTree
-    pcl::PointT point_of_interest = cloud -> point[index];
+    PointT point_of_interest = cloud -> point[index];
     std::vector<int> cluster_member_check = tree->search(point_of_interest.x, point_of_interest.y, point_of_interest.z, distanceTol);
 
     for (int id : cluster_member_check)
@@ -282,18 +278,30 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::E
         tree->insert({point.x, point.y, point.y}, i);
     }
 
-    std::vector<std::vector<int>> clusters;
+    // create a vector to store the individual clusters
+    std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
-	std::vector<bool> processedPoints(points.size(), false);    // keep track what is been processed, set default to false
+    // keep track what is been processed, set default to false
+	std::vector<bool> processed_points(cloud -> points.size(), false);    
 
-    for (int i = 0; i < points.size(); ++i)
+    for (int i = 0; i < cloud -> points.size(); ++i)
     {
-        if (processedPoints[i])
+        if (processed_points[i]) // if processed point the go to next
             continue;
 
-        std::vector<int> cluster;
-        clusterHelper(points, processedPoints, i, cluster, tree, distanceTol);
-        clusters.push_back(cluster);
+        // place to store the individual cluster
+        typename pcl::PointCloud<PointT>::Ptr cluster(new pcl::PointCloud<PointT>);
+
+        // apply the KdTree efficient search
+        clusterHelper(cloud, processed_points, i, cluster, tree, distanceTol);
+        
+        if ((cluster->size() >= min_size) && (cluster->size() <= max_size))
+        {
+            cluster->width = cluster->size();
+            cluster->height = 1;
+            cluster->is_dense = true;
+            clusters.push_back(cluster);
+        }
     }
  
 	return clusters;
