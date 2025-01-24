@@ -118,7 +118,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
   ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
 
   // load point cloud data
-  pcl::PointCloud<pcl::PointXYZI>::Ptr input_cloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
+  pcl::PointCloud<pcl::PointXYZI>::Ptr input_cloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000006.pcd");
   // // render data for check
   // renderPointCloud(viewer,inputCloud,"inputCloud");
 
@@ -134,12 +134,12 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
                                                                                     max_point);
   
   // 2. Segmentaion
-  // int iterations = 100;
-  // float distance = 0.2;
-  // std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlane(sampled_cloud,
-  //                                                                                                                                     iterations,
-  //                                                                                                                                     distance);
-  int iterations = 100;
+//   int iterations = 100;
+//   float distance = 0.2;
+//   std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlane(sampled_cloud,
+//                                                                                                                                       iterations,
+//                                                                                                                                       distance);
+  int iterations = 30;
   float distance = 0.2;
   std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segment_cloud = pointProcessorI->SegmentPlaneRansac3D(sampled_cloud,
                                                                                                                                                iterations,
@@ -150,15 +150,19 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
 
   // 3. Clustering
   // a) definition of the hyperparameters
-  float cluster_tolerance = 0.5;
+  float cluster_tolerance = 0.2;
   int min_cluster_size = 10;
   int max_cluster_size = 600;
 
   // b) clustering
-  std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
-                                                                                                  cluster_tolerance,
-                                                                                                  min_cluster_size,
-                                                                                                  max_cluster_size );
+//   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
+//                                                                                                   cluster_tolerance,
+//                                                                                                   min_cluster_size,
+//                                                                                                   max_cluster_size );
+  std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->EuclideanCluster(segment_cloud.first,
+                                                                                                   cluster_tolerance,
+                                                                                                   min_cluster_size,
+                                                                                                   max_cluster_size);
 
   // 4. Rendering and bounding boxes
   std::vector<Color> render_colours = {Color(1,0,0), Color(0,1,0), Color(0,0,1)};
@@ -188,7 +192,7 @@ void cityBlockStream(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPoin
 
     // 2. Segmentation of the ground plane
     // a) definition of the hyperparameters
-    int iterations = 100;
+    int iterations = 20;
     float distance = 0.2;
 
     // b) Segmentation
@@ -203,18 +207,18 @@ void cityBlockStream(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPoin
 
     // a) definition of the hyperparameters
     float cluster_tolerance = 0.4;
-    int min_cluster_size = 30;
-    int max_cluster_size = 600;
+    int min_cluster_size = 10;
+    int max_cluster_size = 1000;
 
     // b) clustering
-    // std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
-    //                                                                                                 cluster_tolerance,
-    //                                                                                                 min_cluster_size,
-    //                                                                                                 max_cluster_size);
-    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->EuclideanCluster(segment_cloud.first,
-                                                                                                    cluster_tolerance,
-                                                                                                    min_cluster_size,
-                                                                                                    max_cluster_size);
+    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
+                                                                                                     cluster_tolerance,
+                                                                                                     min_cluster_size,
+                                                                                                     max_cluster_size);
+    //std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->EuclideanCluster(segment_cloud.first,
+    //                                                                                                cluster_tolerance,
+    //                                                                                                min_cluster_size,
+    //                                                                                                max_cluster_size);
     // 4. Rendering and bounding boxes
     int ClusterId = 0;
 
@@ -259,6 +263,11 @@ void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& vi
 
 int main (int argc, char** argv)
 {
+    bool city_block = true;
+    bool stream_city_block = false;
+    bool simple_highway = false;
+
+    
     std::cout << "starting enviroment" << std::endl;
 
     pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
@@ -266,10 +275,19 @@ int main (int argc, char** argv)
     initCamera(setAngle, viewer);
 
     // No stream
-    //simpleHighway(viewer);
-    //cityBlock(viewer);
+    if (stream_city_block!=true)
+    {
+        if (simple_highway==true){
+            simpleHighway(viewer);
+        } else if (city_block==true) {
+            cityBlock(viewer);
+        }
+        while (!viewer->wasStopped ())
+        {
+            viewer->spinOnce ();
+        } 
 
-
+    } else {
     // Stream
     //Definitions outside the loop
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
@@ -294,5 +312,6 @@ int main (int argc, char** argv)
             streamIterator = stream.begin();
 
         viewer->spinOnce ();
-    } 
+    }
+    }
 }
