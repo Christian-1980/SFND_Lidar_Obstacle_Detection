@@ -269,7 +269,7 @@ void ProcessPointClouds<PointT>::clusterHelper(int index, const std::vector<std:
 
 // resuse / adapt the quiz code
 template<typename PointT>
-std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::EuclideanCluster(typename pcl::PointCloud<PointT>::Ptr cloud, float distanceTol, int min_size, int max_size)
+std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::EuclideanCluster(const typename pcl::PointCloud<PointT>::Ptr cloud, float distanceTol, int min_size, int max_size)
 {
 	// there is a need for the KdTree object for the efficient searchsearch
     KdTree* tree = new KdTree;
@@ -309,12 +309,13 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::E
     for (std::vector<int> cluster: clusters)
     {
 
-        if ((cluster.size() >= min_size) && (cluster.size() <= max_size))
+        if ((cluster.size() > min_size) && (cluster.size() <= max_size))
         {
             typename pcl::PointCloud<PointT>::Ptr individual_cluster(new pcl::PointCloud<PointT>);
+
             for (int index: cluster)
             {
-                individual_cluster -> push_back(cloud ->points[index]);
+                individual_cluster -> points.push_back(cloud -> points[index]);
             }
             
             individual_cluster->width = individual_cluster -> points.size();
