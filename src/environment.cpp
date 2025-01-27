@@ -125,8 +125,8 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
   // 1. Downsampling
   // downsampling hyperparams
   float filter_resolution = 0.2;
-  Eigen::Vector4f min_point (-15, -6.0, -3, 1);
-  Eigen::Vector4f max_point (30, 6.0, 10, 1);
+  Eigen::Vector4f min_point (-10, -6.0, -2, 1);
+  Eigen::Vector4f max_point (30, 6.0, 1, 1);
 
   pcl::PointCloud<pcl::PointXYZI>::Ptr sampled_cloud = pointProcessorI->FilterCloud(input_cloud,
                                                                                     filter_resolution,
@@ -151,8 +151,8 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
   // 3. Clustering
   // a) definition of the hyperparameters
   float cluster_tolerance = 0.5;
-  int min_cluster_size = 10;
-  int max_cluster_size = 600;
+  int min_cluster_size = 5;
+  int max_cluster_size = 200;
 
   // b) clustering
 //   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
@@ -172,6 +172,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
   for (auto cluster : clustered_cloud)
   {
       std::cout << "Cluster " << std::to_string(ClusterId) << " has a size of ";
+      pointProcessorI->numPoints(cluster);
       renderPointCloud(viewer, cluster, "obstCloud_" + std::to_string(ClusterId), render_colours[ClusterId]);  
       Box box = pointProcessorI->BoundingBox(cluster);
       renderBox(viewer, box, ClusterId);  
