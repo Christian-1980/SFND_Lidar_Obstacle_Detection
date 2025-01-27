@@ -272,10 +272,14 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::E
 {
 	// there is a need for the KdTree object for the efficient searchsearch
     KdTree* tree = new KdTree;
+
+    // have a vectro to store all points
+    std::vector<std::vector<float>> cloud_points(cloud -> points.size());
     for (int i = 0; i < cloud->points.size(); i++)
     {
         PointT point = cloud->points[i];
-        tree->insert({point.x, point.y, point.y}, i);
+        tree->insert({point.x, point.y, point.z}, i);
+        cloud_points.push_back(point);
     }
 
     // create a vector to store the individual clusters
@@ -290,21 +294,35 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::E
             continue;
 
         // place to store the individual cluster
-        typename pcl::PointCloud<PointT>::Ptr cluster(new pcl::PointCloud<PointT>);
+        std::vector<int> clusterIds;
 
         // apply the KdTree efficient search
-        clusterHelper(cloud, processed_points, i, cluster, tree, distanceTol);
-        
-        if ((cluster->size() >= min_size) && (cluster->size() <= max_size))
+        clusterHelper(i, cloud_points, clusterIds, processed_points, tree, distanceTol);
+        clusters.push_back(clusterIds);
+    }
+
+    // Create a new cloud that consists of a vector hosting all clusters
+    std::vector<typename pcl::PointCloud<PointT>::Ptr> cloud_clusters;
+    
+    for (std::vector<int> cluster: clusters)
+    {
+
+        if ((cluster.size() >= min_size) && (cluster.size() <= max_size))
         {
-            cluster->width = cluster->size();
-            cluster->height = 1;
-            cluster->is_dense = true;
-            clusters.push_back(cluster);
+            typename pcl::PointCloud<PointT>::Ptr individual_cluster(new pcl::PointCloud<PointT>);
+            for (int index: cluster)
+            {
+                individual_cluster -> push_back(cloud ->points[index]);
+            }
+            
+            individual_cluster->width = individual_cluster -> points.size();
+            individual_cluster->height = 1;
+            individual_cluster->is_dense = true;
+            cloud_clusters.push_back(individual_cluster);
         }
     }
  
-	return clusters;
+	return cloud_clusters;
 
 }
 
