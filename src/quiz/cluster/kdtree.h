@@ -38,12 +38,12 @@ struct KdTree
 		delete root;
 	}
 
-	void insertHelper(Node*& node, uint depth, const std::vector<float>& point, int id) {
+	void insertHelper(Node*& node, uint depth, std::vector<float> point, int id) {
         if (node == NULL) {
             node = new Node(point, id);
             return;
         } else {
-            uint splitAxis = depth % 3;
+            uint splitAxis = depth % 2;
             if (point[splitAxis] < node->point[splitAxis]) {
                 insertHelper(node->left, depth + 1, point, id);
             } else {
