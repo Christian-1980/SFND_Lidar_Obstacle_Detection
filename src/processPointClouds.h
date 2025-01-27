@@ -47,7 +47,7 @@ public:
 
     std::vector<typename pcl::PointCloud<PointT>::Ptr> Clustering(typename pcl::PointCloud<PointT>::Ptr cloud, float distanceTol, int min_size, int max_size);
 
-    void clusterHelper(typename pcl::PointCloud<PointT>::Ptr cloud, std::vector<bool>& processed_points, int index, typename pcl::PointCloud<PointT>::Ptr cluster, KdTree* tree, float distanceTol);
+    void clusterHelper(int index, const std::vector<std::vector<float>>& points, std::vector<int>& cluster_index, std::vector<bool>& processed_points, KdTree* tree, float distanceTol);
 
     std::vector<typename pcl::PointCloud<PointT>::Ptr> EuclideanCluster(typename pcl::PointCloud<PointT>::Ptr cloud, float distanceTol, int min_size, int max_size);
 

@@ -254,7 +254,7 @@ void ProcessPointClouds<PointT>::clusterHelper(int index, const std::vector<std:
     cluster_index.push_back(index);
 
     // 3. now run thru all points of the cloud in a efficient way by using KdTree
-    PointT point_of_interest = cloud -> points[index];
+    //PointT point_of_interest = cloud -> points[index];
     
     std::vector<int> cluster_member_check = tree->search(points[index], distanceTol);
 
@@ -275,16 +275,17 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::E
     KdTree* tree = new KdTree;
 
     // have a vectro to store all points
-    std::vector<std::vector<float>> cloud_points(cloud -> points.size());
+    std::vector<std::vector<float>> cloud_points;
+
     for (int i = 0; i < cloud->points.size(); i++)
     {
-        PointT point = cloud->points[i];
-        tree->insert({point.x, point.y, point.z}, i);
+        std::vector<float> point = {cloud->points[i].x, cloud->points[i].y, cloud->points[i].z};
+        tree->insert(point, i);
         cloud_points.push_back(point);
     }
 
     // create a vector to store the individual clusters
-    std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
+    std::vector<std::vector<int>> clusters;
 
     // keep track what is been processed, set default to false
 	std::vector<bool> processed_points(cloud -> points.size(), false);    
