@@ -72,7 +72,7 @@ struct KdTree
 
     std::vector<int> searchHelper(std::vector<float> pointToCheck, Node *&node, uint depth, float distanceTol, std::vector<int> &ids)
     {
-        uint splitAxis = depth % 3;
+        uint splitAxis = depth%2;
 
         if (node != NULL) 
         {
