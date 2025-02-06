@@ -208,9 +208,9 @@ void cityBlockStream(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPoin
 
 
     // a) definition of the hyperparameters
-    float cluster_tolerance = 0.4;
-    int min_cluster_size = 10;
-    int max_cluster_size = 500;
+    float cluster_tolerance = 0.5;
+    int min_cluster_size = 5;
+    int max_cluster_size = 200;
 
     // b) clustering
     //std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
