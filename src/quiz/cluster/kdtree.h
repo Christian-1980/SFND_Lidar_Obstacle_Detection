@@ -43,7 +43,7 @@ struct KdTree
             node = new Node(point, id);
             return;
         } else {
-            uint splitAxis = depth % 2;
+            uint splitAxis = depth % 3;
             if (point[splitAxis] < node->point[splitAxis]) {
                 insertHelper(node->left, depth + 1, point, id);
             } else {
