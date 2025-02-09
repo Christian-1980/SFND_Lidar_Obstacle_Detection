@@ -145,18 +145,18 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
                                                                                                                                                iterations,
                                                                                                                                                distance);
   
-  //renderPointCloud(viewer,segment_cloud.first,"obstCloud",Color(1,0,0));
+  renderPointCloud(viewer,segment_cloud.first,"obstCloud",Color(1,0,0));
   renderPointCloud(viewer,segment_cloud.second,"planeCloud",Color(0,1,0));
 
   // 3. Clustering
   // a) definition of the hyperparameters
   float cluster_tolerance = 0.5;
   int min_cluster_size = 5;
-  int max_cluster_size = 200;
+  int max_cluster_size = 600;
 
   // b) clustering
 //   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
-//                                                                                                   cluster_tolerance,
+//                                                                                                  cluster_tolerance,
 //                                                                                                   min_cluster_size,
 //                                                                                                   max_cluster_size );
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->EuclideanCluster(segment_cloud.first,
@@ -203,14 +203,14 @@ void cityBlockStream(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPoin
                                                                                                                                                 iterations,
                                                                                                                                                 distance);
     // c) render cloud
-    // renderPointCloud(viewer, segment_cloud.first, "obstacleCloud", Color(1,0,0));
+    renderPointCloud(viewer, segment_cloud.first, "obstacleCloud", Color(1,0,0));
     renderPointCloud(viewer, segment_cloud.second, "planeCloud", Color(0,1,0));
 
 
     // a) definition of the hyperparameters
     float cluster_tolerance = 0.5;
     int min_cluster_size = 5;
-    int max_cluster_size = 200;
+    int max_cluster_size = 500;
 
     // b) clustering
     //std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clustered_cloud = pointProcessorI->Clustering(segment_cloud.first,
