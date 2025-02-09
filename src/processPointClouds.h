@@ -49,6 +49,8 @@ public:
 
     void clusterHelper(int index, const std::vector<std::vector<float>>& points, std::vector<int>& cluster_index, std::vector<bool>& processed_points, KdTree* tree, float distanceTol);
 
+    std::vector<std::vector<int>> ClusteringEucled(const std::vector<std::vector<float>> &points, KdTree *&tree, float distanceTol, float minSize, float maxSize);
+
     std::vector<typename pcl::PointCloud<PointT>::Ptr> EuclideanCluster(typename pcl::PointCloud<PointT>::Ptr cloud, float distanceTol, int min_size, int max_size);
 
     Box BoundingBox(typename pcl::PointCloud<PointT>::Ptr cluster);
