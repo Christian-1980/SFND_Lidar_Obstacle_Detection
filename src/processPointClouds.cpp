@@ -247,85 +247,115 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 template<typename PointT>
 void ProcessPointClouds<PointT>::clusterHelper(int index, const std::vector<std::vector<float>>& points, std::vector<int>& cluster_index, std::vector<bool>& processed_points, KdTree* tree, float distanceTol)
 {
-    // 1. Vector to store which point already been processed
-    processed_points[index] = true;
-
-    // 2. get the cluster points by index
-    cluster_index.push_back(index);
-
-    // 3. now run thru all points of the cloud in a efficient way by using KdTree
-    //PointT point_of_interest = cloud -> points[index];
-    
-    std::vector<int> cluster_member_check = tree->search(points[index], distanceTol);
-
-    for (int id : cluster_member_check)
+    if (!processed_points[index])
     {
-        if (!processed_points[id])
+        // 1. Vector to store which point already been processed
+        processed_points[index] = true;
+
+        // 2. get the cluster points by index
+        cluster_index.push_back(index);
+
+        // 3. now run thru all points of the cloud in a efficient way by using KdTree
+        //PointT point_of_interest = cloud -> points[index];
+    
+        std::vector<int> cluster_member_check = tree->search(points[index], distanceTol);
+        std::cout << "Size of member check is " << cluster_member_check.size() << std::endl;
+
+        for (int id : cluster_member_check)
         {
-            clusterHelper(id, points, cluster_index, processed_points, tree, distanceTol);
-        }
+            if (!processed_points[id])
+            {   
+                clusterHelper(id, points, cluster_index, processed_points, tree, distanceTol);
+            }
+    }
     }
 }
+
+template <typename PointT>
+std::vector<std::vector<int>> ProcessPointClouds<PointT>::ClusteringEucled(const std::vector<std::vector<float>> &points, KdTree *&tree, float distanceTol, float min_size, float max_size)
+{
+// create a vector to store the individual clusters
+    std::vector<std::vector<int>> individual_clusters;
+
+    // keep track what is been processed, set default to false
+	std::vector<bool> processed_points(points.size(), false);    
+
+    for (int i = 0; i < points.size(); ++i)
+    {
+        if (!processed_points[i]) // if processed point the go to next
+        {
+
+           // place to store the individual cluster
+           std::vector<int> clusterIds;
+
+           // apply the KdTree efficient search
+           clusterHelper(i, points, clusterIds, processed_points, tree, distanceTol);
+           if (clusterIds.size() >= min_size )//&& clusterIds.size()<= max_size)
+            {
+              individual_clusters.push_back(clusterIds);
+            }
+        }
+    }
+    std::cout << "There are following number of individual clusters found: " << individual_clusters.size() << std::endl;
+
+    return individual_clusters;
+}
+
 
 // resuse / adapt the quiz code
 template<typename PointT>
 std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::EuclideanCluster(const typename pcl::PointCloud<PointT>::Ptr cloud, float distanceTol, int min_size, int max_size)
 {
-	// there is a need for the KdTree object for the efficient searchsearch
+	// Time clustering process
+    auto startTime = std::chrono::steady_clock::now();
+
+    // Vector to store the different obstacles
+    std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
+    
+    // there is a need for the KdTree object for the efficient searchsearch
     KdTree* tree = new KdTree;
 
     // have a vectro to store all points
-    std::vector<std::vector<float>> cloud_points;
+    std::vector<std::vector<float>> cloud_points(cloud -> points.size());
 
     for (int i = 0; i < cloud->points.size(); i++)
     {
         std::vector<float> point = {cloud->points[i].x, cloud->points[i].y, cloud->points[i].z};
         tree->insert(point, i);
-        cloud_points.push_back(point);
+        cloud_points[i] = point;
     }
+    std::cout << "Size of cloud points is " << cloud_points.size() << std::endl;
 
-    // create a vector to store the individual clusters
-    std::vector<std::vector<int>> clusters;
 
-    // keep track what is been processed, set default to false
-	std::vector<bool> processed_points(cloud -> points.size(), false);    
+    // Clustering itself
+    std::vector<std::vector<int>> individual_clusters = ClusteringEucled(cloud_points, tree, distanceTol, min_size, max_size);
 
-    for (int i = 0; i < cloud -> points.size(); ++i)
+
+
+    for (std::vector<int> cluster: individual_clusters)
     {
-        if (processed_points[i]) // if processed point the go to next
-            continue;
+        // Create a new cloud that consists of points coming from 
+        typename pcl::PointCloud<PointT>::Ptr cloud_clusters(new pcl::PointCloud<PointT>);
 
-        // place to store the individual cluster
-        std::vector<int> clusterIds;
-
-        // apply the KdTree efficient search
-        clusterHelper(i, cloud_points, clusterIds, processed_points, tree, distanceTol);
-        clusters.push_back(clusterIds);
-    }
-
-    // Create a new cloud that consists of a vector hosting all clusters
-    std::vector<typename pcl::PointCloud<PointT>::Ptr> cloud_clusters;
-    
-    for (std::vector<int> cluster: clusters)
-    {
-
-        if ((cluster.size() > min_size) && (cluster.size() <= max_size))
+        for (int index: cluster)
         {
-            typename pcl::PointCloud<PointT>::Ptr individual_cluster(new pcl::PointCloud<PointT>);
-
-            for (int index: cluster)
-            {
-                individual_cluster -> points.push_back(cloud -> points[index]);
-            }
-            
-            individual_cluster->width = individual_cluster -> points.size();
-            individual_cluster->height = 1;
-            individual_cluster->is_dense = true;
-            cloud_clusters.push_back(individual_cluster);
+                cloud_clusters -> points.push_back(cloud -> points[index]);
         }
+            
+        cloud_clusters->width = cloud_clusters -> points.size();
+        cloud_clusters->height = 1;
+        cloud_clusters->is_dense = true;
+
+        clusters.push_back(cloud_clusters);
+
+        std::cout << "PointCloud representing the Cluster: " << cloud_clusters -> points.size() << " data points." << std::endl;
     }
- 
-	return cloud_clusters;
+    
+    auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    std::cout << "clustering took " << elapsedTime.count() << " milliseconds and found " << clusters.size() << " clusters" << std::endl;
+
+	return clusters;
 
 }
 
