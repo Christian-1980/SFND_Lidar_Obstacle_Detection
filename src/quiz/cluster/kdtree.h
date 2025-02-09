@@ -42,13 +42,14 @@ struct KdTree
         if (node == NULL) {
             node = new Node(point, id);
             return;
-        } else {
-            uint splitAxis = depth % 3;
-            if (point[splitAxis] < node->point[splitAxis]) {
+        }
+		
+		
+        uint splitAxis = depth % 3;
+        if (point[splitAxis] < node->point[splitAxis]) {
                 insertHelper(node->left, depth + 1, point, id);
-            } else {
+        } else {
                 insertHelper(node->right, depth + 1, point, id);
-            }
         }
     }
 
@@ -72,13 +73,13 @@ struct KdTree
 
     std::vector<int> searchHelper(std::vector<float> pointToCheck, Node *&node, uint depth, float distanceTol, std::vector<int> &ids)
     {
-        uint splitAxis = depth%2;
+        uint splitAxis = depth%3;
 
         if (node != NULL) 
         {
-            if ((node->point[0] <= (pointToCheck[0] + distanceTol) && node->point[0] >= (pointToCheck[0] - distanceTol) &&
+            if (node->point[0] <= (pointToCheck[0] + distanceTol) && node->point[0] >= (pointToCheck[0] - distanceTol) &&
 				node->point[1] <= (pointToCheck[1] + distanceTol) && node->point[1] >= (pointToCheck[1] - distanceTol) &&
-				node->point[2] <= (pointToCheck[2] + distanceTol) && node->point[2] >= (pointToCheck[2] - distanceTol))) 
+				node->point[2] <= (pointToCheck[2] + distanceTol) && node->point[2] >= (pointToCheck[2] - distanceTol)) 
             {
 				
                 float distance = EuclideanDistance(node->point, pointToCheck);
@@ -92,18 +93,18 @@ struct KdTree
             // Intersection of the bounding box with the split line
 			if (node->point[splitAxis] <= (pointToCheck[splitAxis] + distanceTol) && node->point[splitAxis] >= (pointToCheck[splitAxis] - distanceTol))
 			{
-				searchHelper(pointToCheck, node->left, distanceTol, depth + 1, ids);
-				searchHelper(pointToCheck, node->right, distanceTol, depth + 1, ids);
+				searchHelper(pointToCheck, node->left, depth + 1, distanceTol, ids);
+				searchHelper(pointToCheck, node->right, depth + 1, distanceTol, ids);
 			}
 			// Recursive 2a - if node's cutting axis is NOT intersecting bounding box - min bound
 			else if (node->point[splitAxis] < (pointToCheck[splitAxis] - distanceTol))
 			{
-				searchHelper(pointToCheck, node->right, distanceTol, depth + 1, ids);
+				searchHelper(pointToCheck, node->right, depth + 1, distanceTol, ids);
 			}
 			// Recursive 2b - if node's cutting axis is NOT intersecting bounding box - max bound
 			else
 			{
-				searchHelper(pointToCheck, node->left, distanceTol, depth + 1, ids);
+				searchHelper(pointToCheck, node->left, depth + 1, distanceTol, ids);
 			}
 	    }
 
